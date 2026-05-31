@@ -1,0 +1,5 @@
+.env
+node_modules
+Node-*/data/database
+Node-*/data/caches
+*.log
