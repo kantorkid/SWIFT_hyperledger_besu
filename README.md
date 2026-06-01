@@ -1,189 +1,188 @@
-# SWIFT Hyperledger Besu Settlement Network
-
-A SWIFT-inspired interbank settlement platform built on Hyperledger Besu using QBFT consensus.
-
-The platform demonstrates how a permissioned blockchain can be used to manage approved financial institutions, execute bank-to-bank settlements, monitor liquidity, and provide operational visibility through a modern React dashboard.
-
-## Features
-
-### Permissioned Network
-
-* Hyperledger Besu QBFT consensus
-* Four validator nodes
-* Account allowlisting
-* Permissioned participation
-
-### SWIFT Administration
-
-* SWIFT operator wallet controls bank onboarding
-* Approve banks
-* Remove banks
-* On-chain bank registry
-* Bank names stored on-chain
-
-### Settlement Engine
-
-* Approved banks can transfer funds between each other
-* Unauthorized participants are rejected
-* Settlement references recorded on-chain
-* Complete settlement audit trail
-
-### Liquidity Monitoring
-
-* Real-time wallet balances for approved banks
-* Liquidity visibility across participating institutions
-
-### Audit & Compliance
-
-* Settlement history
-* Bank approval history
-* Bank removal history
-* Security monitoring for rejected settlement attempts
-
-### Frontend Dashboard
-
-* React
-* Ethers.js
-* MetaMask integration
-* Automatic network switching
-* Real-time blockchain data
-
-## Technology Stack
-
-### Blockchain
-
-* Hyperledger Besu
-* QBFT Consensus
-* Solidity
-* Hardhat
-* Ethers.js
-
-### Frontend
-
-* React
-* Vite
-* MetaMask
-
-### Infrastructure
-
-* Permissioned Ethereum Network
-* JSON-RPC
-* Local Validator Nodes
-
-## Smart Contract Capabilities
-
-### Bank Management
-
-approveBank(address bank, string name)
-
-removeBank(address bank, string name)
-
-getApprovedBanks()
-
-### Settlement
-
-transferToBank(address toBank, string paymentReference)
-
-### Queries
-
-approvedBanks(address)
-
-bankNames(address)
-
-SWIFT()
-
 ## Security Controls
 
 ### Network Layer
 
-* Account allowlisting
+* Hyperledger Besu QBFT consensus
 * Permissioned validator network
-* QBFT consensus
+* Account allowlisting
+* Controlled network participation
 
 ### Smart Contract Layer
 
-* SWIFT-only administration
-* Approved-bank-only settlements
+Only approved banks can execute settlements:
+
+```solidity
+modifier onlyApprovedBanks(address bank) {
+    require(
+        approvedBanks[bank],
+        "Only Approved Banks can transact on the SWIFT network."
+    );
+    _;
+}
+```
+
+Additional controls:
+
+* SWIFT-only bank onboarding
+* SWIFT-only bank removal
 * Settlement audit trail
+* On-chain bank registry
+* Named institution tracking
 
 ### Monitoring Layer
 
+The dashboard provides:
+
+* Approved bank monitoring
+* Real-time liquidity visibility
 * Settlement history
-* Administrative history
-* Rejected transaction monitoring
-* Liquidity visibility
+* Administration history
+* Unauthorized participant detection
 
-## Example Workflow
+---
 
-1. SWIFT operator approves a bank.
-2. Approved bank appears in the dashboard.
-3. Liquidity becomes visible.
-4. Bank initiates a settlement.
-5. Settlement is finalized by QBFT validators.
-6. Event is recorded in settlement history.
-7. Unauthorized attempts are logged by the monitoring layer.
+## Automated Deployment
 
-## Future Enhancements
+The project automatically updates frontend configuration after deployment.
 
-* Multi-currency settlement
-* CBDC integration
-* ISO 20022 messaging support
-* Settlement limits
-* Liquidity thresholds
-* Risk scoring
-* Regulatory reporting
-* Transaction analytics
-* Cross-chain settlement
+Running:
 
-## Architecture
+```bash
+npm run deploy-besu
+```
 
-┌───────────────────────────────────────────┐
-│             React Dashboard               │
-│-------------------------------------------│
-│ Approved Banks                            │
-│ Liquidity Monitoring                      │
-│ Settlement History                        │
-│ Admin History                             │
-│ Security Monitoring                       │
-└───────────────────────────────────────────┘
-                     │
-                     ▼
-┌───────────────────────────────────────────┐
-│            MetaMask Wallets               │
-│-------------------------------------------│
-│ SWIFT Operator                            │
-│ Bank of America                           │
-│ Bank of China                             │
-│ JP Morgan                                 │
-│ Additional Banks                          │
-└───────────────────────────────────────────┘
-                     │
-                     ▼
-┌───────────────────────────────────────────┐
-│      SwiftHyperledgerBesu Contract        │
-│-------------------------------------------│
-│ Approve Bank                              │
-│ Remove Bank                               │
-│ Bank Registry                             │
-│ Settlement Processing                     │
-│ Event Emission                            │
-└───────────────────────────────────────────┘
-                     │
-                     ▼
-┌───────────────────────────────────────────┐
-│       Hyperledger Besu QBFT Network       │
-│-------------------------------------------│
-│ Validator Node 1                          │
-│ Validator Node 2                          │
-│ Validator Node 3                          │
-│ Validator Node 4                          │
-└───────────────────────────────────────────┘
-                     │
-                     ▼
-┌───────────────────────────────────────────┐
-│          Security Monitoring              │
-│-------------------------------------------│
-│ Failed Transactions                       │
-│ Unauthorized Attempts                     │
-│ Operational Visibility                    │
-└───────────────────────────────────────────┘
+will:
+
+1. Deploy the smart contract
+2. Update `frontend/src/contractAddress.js`
+3. Update `deployments/besu.json`
+4. Synchronize the React dashboard with the newest deployment
+
+No manual contract address updates are required.
+
+---
+
+## Network Management
+
+### Start Network
+
+```bash
+npm run start-network
+```
+
+Starts all four QBFT validator nodes.
+
+### Stop Network
+
+```bash
+npm run stop-network
+```
+
+Stops all Besu validator processes.
+
+### Reset Network
+
+```bash
+npm run reset-network
+```
+
+Deletes blockchain state and cache data.
+
+### Fresh Start
+
+```bash
+npm run fresh-start
+```
+
+Performs:
+
+1. Network reset
+2. Validator startup
+3. Contract compilation
+4. Smart contract deployment
+5. Frontend contract synchronization
+
+After completion:
+
+```bash
+cd frontend
+npm run dev
+```
+
+---
+
+## Dashboard Features
+
+### Approved Banks
+
+Displays:
+
+* Bank name
+* Wallet address
+* Approval status
+* Current liquidity balance
+
+### Settlement Actions
+
+Allows approved banks to:
+
+* Initiate settlements
+* Transfer funds
+* Record payment references
+
+### Settlement History
+
+Displays:
+
+* Block number
+* Sending institution
+* Receiving institution
+* Amount
+* Payment reference
+* Transaction hash
+
+### Administration History
+
+Displays:
+
+* Bank approvals
+* Bank removals
+* Administrative transaction history
+
+### Liquidity Monitoring
+
+Real-time balances are retrieved directly from the Besu network using:
+
+```javascript
+provider.getBalance(bankAddress)
+```
+
+This provides visibility into the settlement liquidity of participating institutions.
+
+---
+
+## Example Security Scenario
+
+### Unauthorized Participant
+
+An unapproved wallet attempts to submit a settlement:
+
+```text
+Only Approved Banks can transact on the SWIFT network.
+```
+
+The transaction is rejected and settlement does not occur.
+
+### Approved Participant
+
+An approved bank submits a settlement:
+
+```text
+Bank of America
+      ↓
+SwiftHyperledgerBesu
+      ↓
+Bank of China
+```
+
+The transfer is finalized through the QBFT validator network and recorded in settlement history.

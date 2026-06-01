@@ -6,7 +6,13 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "rebuild": "hardhat compile",
-    "deploy-besu": "hardhat run scripts/deploy.js --network besuSwift"
+    "deploy-besu": "hardhat run scripts/deploy.js --network besuSwift",
+
+    "start-network": "./scripts/start-network.sh",
+    "stop-network": "./scripts/stop-network.sh",
+    "reset-network": "./scripts/reset-network.sh",
+
+    "fresh-start": "npm run reset-network && npm run start-network && npm run rebuild && npm run deploy-besu"
   },
   "repository": {
     "type": "git",

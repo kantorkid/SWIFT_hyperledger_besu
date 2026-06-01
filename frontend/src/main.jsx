@@ -1,13 +1,12 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { ethers } from "ethers";
-import { CONTRACT_ADDRESS, BANKS, labelFor } from "./bankConfig";
+import { CONTRACT_ADDRESS } from "./contractAddress";
 import { SWIFT_ABI } from "./contractAbi";
 import "./styles.css";
 
 const RPC_URL = "http://127.0.0.1:8545";
 const SWIFT_OPERATOR = "0x1d757EA5756cdd3001cFA20d96745C8c2db1BC58";
-
 const BESU_CHAIN_ID = "0x539"; // 1337
 
 async function ensureBesuNetwork() {
@@ -36,7 +35,7 @@ async function ensureBesuNetwork() {
           {
             chainId: BESU_CHAIN_ID,
             chainName: "QBFT Local",
-            rpcUrls: ["http://127.0.0.1:8545"],
+            rpcUrls: [RPC_URL],
             nativeCurrency: {
               name: "ETH",
               symbol: "ETH",
@@ -62,13 +61,11 @@ function App() {
   const [swiftOperator, setSwiftOperator] = useState("-");
   const [bankStatus, setBankStatus] = useState([]);
   const [events, setEvents] = useState([]);
+  const [adminEvents, setAdminEvents] = useState([]);
   const [status, setStatus] = useState("Ready");
   const [connectedAddress, setConnectedAddress] = useState("");
   const [bankAddress, setBankAddress] = useState("");
   const [bankName, setBankName] = useState("");
-  const [adminEvents, setAdminEvents] = useState([]);
-
-  const bankRows = useMemo(() => Object.entries(BANKS), []);
 
   const isSwift =
     connectedAddress &&
@@ -80,15 +77,19 @@ function App() {
       return;
     }
 
-    await ensureBesuNetwork();
+    try {
+      await ensureBesuNetwork();
 
-    const browserProvider = new ethers.BrowserProvider(window.ethereum);
-    await browserProvider.send("eth_requestAccounts", []);
-    const signer = await browserProvider.getSigner();
-    const address = await signer.getAddress();
+      const browserProvider = new ethers.BrowserProvider(window.ethereum);
+      await browserProvider.send("eth_requestAccounts", []);
+      const signer = await browserProvider.getSigner();
+      const address = await signer.getAddress();
 
-    setConnectedAddress(address);
-    setStatus(`Connected: ${formatAddress(address)}`);
+      setConnectedAddress(address);
+      setStatus(`Connected: ${formatAddress(address)}`);
+    } catch (error) {
+      setStatus(error.shortMessage || error.message || "Wallet connection failed.");
+    }
   }
 
   async function loadData() {
@@ -111,96 +112,110 @@ function App() {
       setSwiftOperator("Unavailable");
     }
 
-let statuses = [];
+    const latest = await rpcProvider.getBlockNumber();
+    const fromBlock = Math.max(latest - 1000, 0);
 
-try {
-  const banks = await swift.getApprovedBanks();
+    try {
+      const banks = await swift.getApprovedBanks();
+      console.log("Approved banks from contract:", banks);
 
-console.log("Approved banks from contract:", banks);
+      const statuses = [];
 
-statuses = [];
+      for (const bank of banks) {
+        const approved = await swift.approvedBanks(bank);
+        const name = await swift.bankNames(bank);
+        const balance = await rpcProvider.getBalance(bank);
 
-for (const bank of banks) {
-  const approved = await swift.approvedBanks(bank);
-  const name = await swift.bankNames(bank);
-  const balance = await rpcProvider.getBalance(bank);
+        statuses.push({
+          address: bank,
+          label: name || formatAddress(bank),
+          role: approved ? "Settlement Bank" : "Removed Settlement Bank",
+          approved,
+          balance: ethers.formatEther(balance),
+        });
+      }
 
-  console.log("Loaded bank:", {
-    bank,
-    name,
-    approved,
-    balance: ethers.formatEther(balance),
-  });
+      setBankStatus(statuses);
+    } catch (error) {
+      console.error("Bank loading failed:", error);
+      setBankStatus([]);
+    }
 
-  statuses.push({
-    address: bank,
-    label: name || formatAddress(bank),
-    role: approved ? "Settlement Bank" : "Removed Settlement Bank",
-    approved,
-    balance: ethers.formatEther(balance),
-  });
-}
+    try {
+      const approvedFilter = swift.filters.BankApproved();
+      const removedFilter = swift.filters.BankRemoved();
 
-} catch (error) {
-  console.error("Bank loading failed:", error);
-  statuses = [];
-}
+      const approvedLogs = await swift.queryFilter(
+        approvedFilter,
+        fromBlock,
+        latest
+      );
 
-setBankStatus(statuses);
+      const removedLogs = await swift.queryFilter(
+        removedFilter,
+        fromBlock,
+        latest
+      );
 
-const filter = swift.filters.BankTransfer();
+      const adminHistory = [
+        ...approvedLogs.map((event) => ({
+          type: "Approved",
+          bank: event.args.bank,
+          name: event.args.name,
+          blockNumber: event.blockNumber,
+          txHash: event.transactionHash,
+        })),
 
-const latest = await rpcProvider.getBlockNumber();
-const fromBlock = Math.max(latest - 1000, 0);
+        ...removedLogs.map((event) => ({
+          type: "Removed",
+          bank: event.args.bank,
+          name: event.args.name,
+          blockNumber: event.blockNumber,
+          txHash: event.transactionHash,
+        })),
+      ].sort((a, b) => b.blockNumber - a.blockNumber);
 
-const approvedFilter = swift.filters.BankApproved();
-const removedFilter = swift.filters.BankRemoved();
+      setAdminEvents(adminHistory);
+    } catch (error) {
+      console.error("Admin history loading failed:", error);
+      setAdminEvents([]);
+    }
 
-const approvedLogs = await swift.queryFilter(approvedFilter, fromBlock, latest);
-const removedLogs = await swift.queryFilter(removedFilter, fromBlock, latest);
+    try {
+      const filter = swift.filters.BankTransfer();
+      const logs = await swift.queryFilter(filter, fromBlock, latest);
 
-const adminHistory = [
-  ...approvedLogs.map((event) => ({
-    type: "Approved",
-    bank: event.args.bank,
-    name: event.args.name,
-    blockNumber: event.blockNumber,
-    txHash: event.transactionHash,
-  })),
+      const parsed = await Promise.all(
+        logs.map(async (event) => {
+          const fromName = await swift.bankNames(event.args.fromBank);
+          const toName = await swift.bankNames(event.args.toBank);
 
-  ...removedLogs.map((event) => ({
-    type: "Removed",
-    bank: event.args.bank,
-    name: event.args.name,
-    blockNumber: event.blockNumber,
-    txHash: event.transactionHash,
-  })),
-].sort((a, b) => b.blockNumber - a.blockNumber);
+          return {
+            txHash: event.transactionHash,
+            blockNumber: event.blockNumber,
+            fromBank: event.args.fromBank,
+            toBank: event.args.toBank,
+            fromLabel: fromName || formatAddress(event.args.fromBank),
+            toLabel: toName || formatAddress(event.args.toBank),
+            amount: ethers.formatEther(event.args.amount),
+            paymentReference: event.args.paymentReference,
+          };
+        })
+      );
 
-setAdminEvents(adminHistory);
-
-
-
-const logs = await swift.queryFilter(filter, fromBlock, latest);
-
-    const parsed = logs
-      .map((event) => ({
-        txHash: event.transactionHash,
-        blockNumber: event.blockNumber,
-        fromBank: event.args.fromBank,
-        toBank: event.args.toBank,
-        amount: ethers.formatEther(event.args.amount),
-        paymentReference: event.args.paymentReference,
-      }))
-      .reverse();
-
-    setEvents(parsed);
+      setEvents(parsed.reverse());
+    } catch (error) {
+      console.error("Settlement history loading failed:", error);
+      setEvents([]);
+    }
   }
 
   async function getWritableContract() {
     if (!window.ethereum) {
       throw new Error("MetaMask not found.");
     }
+
+    await ensureBesuNetwork();
 
     const browserProvider = new ethers.BrowserProvider(window.ethereum);
     await browserProvider.send("eth_requestAccounts", []);
@@ -328,24 +343,27 @@ const logs = await swift.queryFilter(filter, fromBlock, latest);
           <h2>Approved Banks</h2>
 
           <div className="bank-list">
-            {bankStatus.map((bank) => (
-              <div className="bank" key={bank.address}>
-                <div>
-                  <strong>{bank.label}</strong>
-                  <p>
-                    {formatAddress(bank.address)} · {bank.role}
-                  </p>
-                  
-                  <p>
-  Balance: {Number(bank.balance || 0).toFixed(2)} ETH
-</p>
-                </div>
+            {bankStatus.length === 0 ? (
+              <p className="muted">No approved banks found.</p>
+            ) : (
+              bankStatus.map((bank) => (
+                <div className="bank" key={bank.address}>
+                  <div>
+                    <strong>{bank.label}</strong>
+                    <p>
+                      {formatAddress(bank.address)} · {bank.role}
+                    </p>
+                    <p>
+                      Balance: {Number(bank.balance || 0).toFixed(2)} ETH
+                    </p>
+                  </div>
 
-                <span className={bank.approved ? "pill ok" : "pill bad"}>
-                  {bank.approved ? "Approved" : "Rejected"}
-                </span>
-              </div>
-            ))}
+                  <span className={bank.approved ? "pill ok" : "pill bad"}>
+                    {bank.approved ? "Approved" : "Rejected"}
+                  </span>
+                </div>
+              ))
+            )}
           </div>
         </div>
 
@@ -410,41 +428,39 @@ const logs = await swift.queryFilter(filter, fromBlock, latest);
         </section>
       )}
 
+      <section className="card large">
+        <h2>Bank Administration History</h2>
+
+        {adminEvents.length === 0 ? (
+          <p className="muted">No bank approval or removal events found yet.</p>
+        ) : (
+          <table>
+            <thead>
+              <tr>
+                <th>Block</th>
+                <th>Action</th>
+                <th>Bank</th>
+                <th>Address</th>
+                <th>Tx</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {adminEvents.map((event) => (
+                <tr key={`${event.txHash}-${event.type}`}>
+                  <td>{event.blockNumber}</td>
+                  <td>{event.type}</td>
+                  <td>{event.name || formatAddress(event.bank)}</td>
+                  <td>{formatAddress(event.bank)}</td>
+                  <td>{formatAddress(event.txHash)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </section>
 
       <section className="card large">
-
-  <h2>Bank Administration History</h2>
-
-  {adminEvents.length === 0 ? (
-    <p className="muted">No bank approval or removal events found yet.</p>
-  ) : (
-    <table>
-      <thead>
-        <tr>
-          <th>Block</th>
-          <th>Action</th>
-          <th>Bank</th>
-          <th>Address</th>
-          <th>Tx</th>
-        </tr>
-      </thead>
-
-      <tbody>
-        {adminEvents.map((event) => (
-          <tr key={`${event.txHash}-${event.type}`}>
-            <td>{event.blockNumber}</td>
-            <td>{event.type}</td>
-            <td>{event.name || labelFor(event.bank)}</td>
-            <td>{formatAddress(event.bank)}</td>
-            <td>{formatAddress(event.txHash)}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  )}
-</section>
-<section className="card large">
-
         <h2>Settlement History</h2>
 
         {events.length === 0 ? (
@@ -466,8 +482,8 @@ const logs = await swift.queryFilter(filter, fromBlock, latest);
               {events.map((event) => (
                 <tr key={event.txHash}>
                   <td>{event.blockNumber}</td>
-                  <td>{labelFor(event.fromBank)}</td>
-                  <td>{labelFor(event.toBank)}</td>
+                  <td>{event.fromLabel}</td>
+                  <td>{event.toLabel}</td>
                   <td>{event.amount} ETH</td>
                   <td>{event.paymentReference}</td>
                   <td>{formatAddress(event.txHash)}</td>

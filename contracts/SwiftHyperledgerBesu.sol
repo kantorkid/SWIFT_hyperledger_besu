@@ -14,6 +14,7 @@ contract SwiftHyperledgerBesu {
 
     mapping (address => bool) public approvedBanks;
     mapping(address => string) public bankNames;
+    mapping(address => bool) public bankEverAdded;
     address[] public bankList;
 
 
@@ -46,7 +47,7 @@ contract SwiftHyperledgerBesu {
     modifier onlyApprovedBanks(address bank) {
         require(
             approvedBanks[bank], 
-            "Only Approved Banks can perform this function.");
+            "Only Approved Banks can transact on the SWIFT network.");
         _;
     }
 
@@ -56,20 +57,22 @@ contract SwiftHyperledgerBesu {
     }
 
 
-    function approveBank(
-        address bank, 
-        string calldata name) 
-            external 
-            onlySwift 
-    {
-        require(!approvedBanks[bank], "Bank already approved");
+function approveBank(address bank, string calldata name)
+    external
+    onlySwift
+{
+    require(!approvedBanks[bank], "Bank already approved");
 
-        approvedBanks[bank] = true;
-        bankNames[bank] = name;
+    approvedBanks[bank] = true;
+    bankNames[bank] = name;
+
+    if (!bankEverAdded[bank]) {
         bankList.push(bank);
-
-        emit BankApproved(bank, name);
+        bankEverAdded[bank] = true;
     }
+
+    emit BankApproved(bank, name);
+}
 
     function getApprovedBanks()
         external
