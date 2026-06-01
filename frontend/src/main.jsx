@@ -50,6 +50,37 @@ async function ensureBesuNetwork() {
   }
 }
 
+function ExplorerPanel() {
+  return (
+    <section className="card explorer-card">
+      <div className="section-header">
+        <div>
+          <p className="eyebrow">Blockchain Explorer</p>
+          <h2>Chainlens Explorer</h2>
+          <p className="muted">
+            View blocks, transactions, contracts, events, and accounts from the private Besu QBFT network.
+          </p>
+        </div>
+
+        <a
+          className="button secondary"
+          href="http://localhost"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Open Full Explorer
+        </a>
+      </div>
+
+      <iframe
+        className="explorer-frame"
+        src="http://localhost"
+        title="Chainlens Explorer"
+      />
+    </section>
+  );
+}
+
 function formatAddress(address) {
   if (!address) return "";
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
@@ -428,7 +459,7 @@ function App() {
         </section>
       )}
 
-      <section className="card large">
+      {/* <section className="card large">
         <h2>Bank Administration History</h2>
 
         {adminEvents.length === 0 ? (
@@ -458,9 +489,9 @@ function App() {
             </tbody>
           </table>
         )}
-      </section>
+      </section> */}
 
-      <section className="card large">
+      {/* <section className="card large">
         <h2>Settlement History</h2>
 
         {events.length === 0 ? (
@@ -492,7 +523,8 @@ function App() {
             </tbody>
           </table>
         )}
-      </section>
+      </section> */}
+      <ExplorerPanel />
     </main>
   );
 }

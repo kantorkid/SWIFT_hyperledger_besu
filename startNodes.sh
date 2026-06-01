@@ -14,8 +14,11 @@ besu \
 --host-allowlist="*" \
 --rpc-http-cors-origins="all" \
 --profile=ENTERPRISE \
+--metrics-enabled \
+--metrics-host=0.0.0.0 \
+--metrics-port=9545 \
+--metrics-protocol=PROMETHEUS \
 > ../node1.log 2>&1 &
-
 cd ..
 
 sleep 5
@@ -35,8 +38,11 @@ besu \
 --host-allowlist="*" \
 --rpc-http-cors-origins="all" \
 --profile=ENTERPRISE \
+--metrics-enabled \
+--metrics-host=0.0.0.0 \
+--metrics-port=9546 \
+--metrics-protocol=PROMETHEUS \
 > ../node2.log 2>&1 &
-
 cd ..
 
 echo "Starting Node-3..."
@@ -54,8 +60,11 @@ besu \
 --host-allowlist="*" \
 --rpc-http-cors-origins="all" \
 --profile=ENTERPRISE \
+--metrics-enabled \
+--metrics-host=0.0.0.0 \
+--metrics-port=9547 \
+--metrics-protocol=PROMETHEUS \
 > ../node3.log 2>&1 &
-
 cd ..
 
 echo "Starting Node-4..."
@@ -73,16 +82,21 @@ besu \
 --host-allowlist="*" \
 --rpc-http-cors-origins="all" \
 --profile=ENTERPRISE \
+--metrics-enabled \
+--metrics-host=0.0.0.0 \
+--metrics-port=9548 \
+--metrics-protocol=PROMETHEUS \
 > ../node4.log 2>&1 &
-
 cd ..
 
 echo "All QBFT permissioned nodes started 🚀"
 
 echo "Node status:"
-sleep 5
+sleep 8
 
 curl -X POST \
 -H "Content-Type: application/json" \
 --data '{"jsonrpc":"2.0","method":"qbft_getValidatorsByBlockNumber","params":["latest"],"id":1}' \
 localhost:8545
+
+echo ""

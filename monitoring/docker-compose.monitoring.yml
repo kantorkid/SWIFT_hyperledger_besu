@@ -1,0 +1,36 @@
+services:
+  prometheus:
+    image: prom/prometheus
+    container_name: swift-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+
+  grafana:
+    image: grafana/grafana
+    container_name: swift-grafana
+    ports:
+      - "3001:3000"
+
+  loki:
+    image: grafana/loki:latest
+    container_name: swift-loki
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/config.yml
+    volumes:
+      - ./loki/config.yml:/etc/loki/config.yml
+
+  promtail:
+    image: grafana/promtail:latest
+    container_name: swift-promtail
+    command: -config.file=/etc/promtail/config.yml
+    volumes:
+      - ./promtail/config.yml:/etc/promtail/config.yml
+      - ../node1.log:/var/log/besu/node1.log
+      - ../node2.log:/var/log/besu/node2.log
+      - ../node3.log:/var/log/besu/node3.log
+      - ../node4.log:/var/log/besu/node4.log
+    depends_on:
+      - loki

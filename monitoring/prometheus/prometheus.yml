@@ -1,0 +1,19 @@
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  - job_name: besu-node-1
+    static_configs:
+      - targets: ["host.docker.internal:9545"]
+
+  - job_name: besu-node-2
+    static_configs:
+      - targets: ["host.docker.internal:9546"]
+
+  - job_name: besu-node-3
+    static_configs:
+      - targets: ["host.docker.internal:9547"]
+
+  - job_name: besu-node-4
+    static_configs:
+      - targets: ["host.docker.internal:9548"]
