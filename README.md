@@ -1,8 +1,25 @@
 # SWIFT Hyperledger Besu Settlement Network
 
-A permissioned interbank settlement network built on Hyperledger Besu QBFT consensus.
+A SWIFT-inspired interbank settlement network built on Hyperledger Besu using QBFT consensus, Solidity smart contracts, and enterprise-grade observability tooling.
 
-This project simulates a SWIFT-style banking network where only approved financial institutions may participate in settlement transactions. The platform includes a Solidity-based settlement contract, a React administration dashboard, a Hyperledger Besu QBFT validator network, and Chainlens blockchain explorer integration.
+This project demonstrates how approved financial institutions can participate in a permissioned blockchain network, execute interbank settlements, monitor validator health, inspect transactions through a blockchain explorer, and observe network activity through Grafana, Prometheus, and Loki.
+
+---
+
+# Overview
+
+Traditional interbank settlement systems rely on centralized messaging and reconciliation infrastructure.
+
+This project explores how a permissioned blockchain can provide:
+
+* Shared transaction visibility
+* Deterministic settlement finality
+* Permissioned participation
+* On-chain auditability
+* Real-time network monitoring
+* Smart contract-based governance
+
+The network operates using Hyperledger Besu's QBFT (Istanbul BFT successor) consensus mechanism and a Solidity settlement contract that restricts participation to approved institutions.
 
 ---
 
@@ -10,74 +27,125 @@ This project simulates a SWIFT-style banking network where only approved financi
 
 ## Permissioned Banking Network
 
-* SWIFT operator-controlled bank onboarding
-* SWIFT operator-controlled bank removal
-* Approved bank registry
-* On-chain bank names
+* SWIFT operator-controlled governance
+* Bank approval workflow
+* Bank removal workflow
+* Approved and rejected participant tracking
+* On-chain institution registry
 * Permissioned settlement execution
-* Unauthorized participant rejection
 
 ## Settlement Processing
 
 * Bank-to-bank settlement transfers
-* Payment reference tracking
-* Settlement audit trail
-* Event-based transaction history
-* Real-time transaction monitoring
+* Payment reference support
+* On-chain audit trail
+* Finalized transaction history
+* Event-driven settlement tracking
 
-## Dashboard
+## Operations Dashboard
 
 The React dashboard provides:
 
-* Approved bank monitoring
-* Settlement history
-* Administration history
+* Network status visibility
+* Latest block monitoring
+* Peer count monitoring
+* Contract monitoring
+* Approved bank registry
+* Rejected bank registry
 * Bank liquidity monitoring
+* Settlement execution controls
+* Embedded Chainlens explorer
 * MetaMask integration
-* Smart contract interaction
 
-## Blockchain Infrastructure
+## Monitoring & Observability
 
-* Hyperledger Besu
-* QBFT Consensus
-* Four-validator architecture
-* Local permissioned network
-* JSON-RPC endpoint
-* Smart contract deployment automation
+* Prometheus metrics collection
+* Grafana dashboards
+* Loki log aggregation
+* Promtail log shipping
+* Validator health monitoring
+* Consensus monitoring
+* Network performance visibility
 
-## Explorer Integration
+## Blockchain Explorer
 
-Chainlens Explorer provides:
+Integrated Chainlens Explorer provides:
 
 * Block explorer
 * Transaction explorer
-* Smart contract explorer
+* Contract explorer
 * Event explorer
-* Network activity monitoring
-* Account activity monitoring
+* Account explorer
+* Network visibility
 
 ---
 
-# Architecture
+# System Architecture
 
 ```text
-                    React Dashboard
-                           │
-                           ▼
-                SwiftHyperledgerBesu
-                    Smart Contract
-                           │
-                           ▼
-              Hyperledger Besu QBFT Network
-                           │
-      ┌────────────────────┼────────────────────┐
-      │                    │                    │
-      ▼                    ▼                    ▼
-  MetaMask           Chainlens Explorer     Besu RPC
-      │                    │
-      ▼                    ▼
- Approved Banks     Blockchain Visibility
+                     React Operations Dashboard
+                                  │
+          ┌───────────────────────┼───────────────────────┐
+          │                       │                       │
+          ▼                       ▼                       ▼
+   Settlement UI          Chainlens Explorer      Grafana Monitoring
+
+                                  │
+                                  ▼
+
+                    SwiftHyperledgerBesu Contract
+
+                                  │
+                                  ▼
+
+                  Hyperledger Besu QBFT Network
+
+        ┌──────────────┬──────────────┬──────────────┬──────────────┐
+        │              │              │              │
+        ▼              ▼              ▼              ▼
+
+      Node 1         Node 2         Node 3         Node 4
+    Validator      Validator      Validator      Validator
+
+                                  │
+                                  ▼
+
+               Prometheus + Loki + Grafana Stack
 ```
+
+---
+
+# Technology Stack
+
+## Blockchain
+
+* Hyperledger Besu
+* QBFT Consensus
+* Solidity
+* Ethers.js
+
+## Frontend
+
+* React
+* Vite
+* MetaMask
+
+## Monitoring
+
+* Prometheus
+* Grafana
+* Loki
+* Promtail
+
+## Explorer
+
+* Chainlens Explorer
+
+## Infrastructure
+
+* Docker
+* Docker Compose
+* Node.js
 
 ---
 
@@ -85,7 +153,7 @@ Chainlens Explorer provides:
 
 The network is governed by the `SwiftHyperledgerBesu` contract.
 
-Core functionality:
+Core functions:
 
 ```solidity
 approveBank()
@@ -94,7 +162,7 @@ transferToBank()
 getApprovedBanks()
 ```
 
-Only approved banks may transact.
+Only approved institutions may settle funds.
 
 ```solidity
 modifier onlyApprovedBanks(address bank) {
@@ -108,60 +176,81 @@ modifier onlyApprovedBanks(address bank) {
 
 ---
 
-# Dashboard Capabilities
+# Dashboard
 
-## Approved Banks
+The operations dashboard displays:
 
-Displays:
+## Network Metrics
+
+* Latest block height
+* Peer count
+* Active contract
+* Connected wallet
+
+## Participant Registry
+
+Each institution displays:
 
 * Bank name
 * Wallet address
 * Approval status
-* Liquidity balance
+* Settlement liquidity
 
-## Settlement Actions
+## Settlement Controls
 
-Allows approved banks to:
+Approved institutions can:
 
-* Transfer settlement funds
-* Submit payment references
-* View settlement outcomes
+* Send settlements
+* Receive settlements
+* Attach payment references
+* Execute on-chain transfers
 
-## Settlement History
+## Explorer
 
-Displays:
+The dashboard embeds Chainlens Explorer for:
 
-* Block number
-* Sending bank
-* Receiving bank
-* Settlement amount
-* Payment reference
-* Transaction hash
+* Block inspection
+* Transaction inspection
+* Contract inspection
+* Event inspection
 
-## Administration History
+---
 
-Displays:
+# Monitoring
 
-* Bank approvals
-* Bank removals
-* Administrative actions
+## Prometheus
 
-## Liquidity Monitoring
+Collects:
 
-Balances are pulled directly from the Besu network using:
+* Block metrics
+* Peer metrics
+* JVM metrics
+* Node metrics
 
-```javascript
-provider.getBalance(bankAddress)
-```
+## Grafana
 
-This provides visibility into available settlement liquidity for participating institutions.
+Provides dashboards for:
+
+* Validator health
+* Network performance
+* Resource utilization
+* Blockchain metrics
+
+## Loki
+
+Aggregates:
+
+* Validator logs
+* Consensus logs
+* Network events
+* Security events
 
 ---
 
 # Project Structure
 
 ```text
-QBFT-Network
+SWIFT_hyperledger_besu
 │
 ├── contracts
 │   └── SwiftHyperledgerBesu.sol
@@ -176,12 +265,20 @@ QBFT-Network
 │
 ├── frontend
 │   ├── src
-│   ├── public
-│   └── package.json
+│   ├── package.json
+│   └── vite.config.js
 │
-├── artifacts
-├── cache
-├── nodes
+├── monitoring
+│   ├── docker-compose.yml
+│   ├── prometheus.yml
+│   ├── loki-config.yml
+│   └── promtail-config.yml
+│
+├── Node-1
+├── Node-2
+├── Node-3
+├── Node-4
+│
 └── README.md
 ```
 
@@ -199,8 +296,6 @@ cd SWIFT_hyperledger_besu
 
 ## Install Dependencies
 
-Root project:
-
 ```bash
 npm install
 ```
@@ -209,15 +304,13 @@ Frontend:
 
 ```bash
 cd frontend
-
 npm install
-
 cd ..
 ```
 
 ---
 
-# Network Management
+# Network Commands
 
 ## Start Network
 
@@ -225,19 +318,11 @@ cd ..
 npm run start-network
 ```
 
-Starts all Besu QBFT validator nodes.
-
----
-
 ## Stop Network
 
 ```bash
 npm run stop-network
 ```
-
-Stops all validator nodes.
-
----
 
 ## Reset Network
 
@@ -245,48 +330,29 @@ Stops all validator nodes.
 npm run reset-network
 ```
 
-Removes blockchain state and resets the network.
-
----
-
 ## Compile Contracts
 
 ```bash
 npm run rebuild
 ```
 
-Compiles all Solidity contracts.
-
----
-
-## Deploy Contract
+## Deploy Contracts
 
 ```bash
 npm run deploy-besu
 ```
 
-Deploys the settlement contract to the Besu network.
-
----
-
-## Fresh Start
-
-Completely rebuilds the environment.
+## Fresh Environment
 
 ```bash
 npm run fresh-start
 ```
 
-Performs:
-
-1. Network reset
-2. Validator startup
-3. Contract compilation
-4. Contract deployment
-
 ---
 
-# Start Dashboard
+# Dashboard
+
+Start the frontend:
 
 ```bash
 cd frontend
@@ -294,11 +360,49 @@ cd frontend
 npm run dev
 ```
 
-Dashboard:
+Open:
 
 ```text
 http://localhost:5173
 ```
+
+---
+
+# Monitoring Stack
+
+Start monitoring:
+
+```bash
+cd monitoring
+
+docker compose up -d
+```
+
+Services:
+
+```text
+Grafana     http://localhost:3001
+Prometheus  http://localhost:9090
+Loki        http://localhost:3100
+```
+
+---
+
+# Chainlens Explorer
+
+Open:
+
+```text
+http://localhost
+```
+
+Chainlens provides:
+
+* Blocks
+* Transactions
+* Contracts
+* Events
+* Accounts
 
 ---
 
@@ -330,58 +434,17 @@ ETH
 
 ---
 
-# Chainlens Explorer
-
-## Requirements
-
-* Docker Desktop
-* Running Besu Network
-
-## Clone Chainlens
-
-```bash
-git clone https://github.com/web3labs/chainlens-free
-```
-
-## Start Explorer
-
-```bash
-cd chainlens-free/docker-compose
-
-NODE_ENDPOINT=http://host.docker.internal:8545 \
-docker compose \
--f docker-compose.yml \
--f chainlens-extensions/docker-compose-quorum-dev-quickstart.yml \
-up
-```
-
-## Open Explorer
-
-```text
-http://localhost
-```
-
-Chainlens automatically indexes:
-
-* Blocks
-* Transactions
-* Contracts
-* Events
-* Accounts
-
----
-
 # Security Model
 
 ## SWIFT Operator
 
-The deploying wallet becomes the SWIFT operator.
+The deploying wallet becomes the network operator.
 
 Responsibilities:
 
 * Approve banks
 * Remove banks
-* Govern network participation
+* Govern participation
 
 ## Approved Banks
 
@@ -389,32 +452,25 @@ Approved banks may:
 
 * Send settlements
 * Receive settlements
-* Participate in network operations
+* Interact with the settlement contract
 
 ## Unauthorized Participants
 
-Unauthorized wallets cannot transact through the settlement network.
-
-Attempting settlement results in:
-
-```text
-Only Approved Banks can transact on the SWIFT network.
-```
+Unauthorized wallets are rejected by contract permissioning.
 
 ---
 
 # Future Enhancements
 
-* Grafana Loki integration
-* Security event monitoring
-* Failed transaction visibility
-* Node health dashboards
-* Elastic Stack integration
-* OpenTelemetry metrics
-* Containerized deployment
-* Role-based administration
+* Multi-signature settlement approval
 * Stablecoin settlement support
 * Multi-currency settlement
+* Digital identity integration
+* KYC/AML workflows
+* Role-based administration
+* OpenTelemetry integration
+* Containerized network deployment
+* Settlement analytics dashboard
 
 ---
 
