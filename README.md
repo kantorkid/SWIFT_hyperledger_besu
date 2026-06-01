@@ -39,7 +39,18 @@ The dashboard provides:
 * Administration history
 * Unauthorized participant detection
 
----
+## Recommended Deployment Process
+
+git clone <repo>
+cd SWIFT_hyperledger_besu
+
+npm install
+cd frontend && npm install && cd ..
+
+npm run fresh-start
+
+cd frontend
+npm run dev
 
 ## Automated Deployment
 
