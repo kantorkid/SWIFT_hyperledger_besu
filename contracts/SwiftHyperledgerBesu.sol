@@ -13,6 +13,8 @@ contract SwiftHyperledgerBesu {
     address public SWIFT;
 
     mapping (address => bool) public approvedBanks;
+    mapping(address => string) public bankNames;
+    address[] public bankList;
 
 
     event BankApproved(
@@ -60,9 +62,22 @@ contract SwiftHyperledgerBesu {
             external 
             onlySwift 
     {
+        require(!approvedBanks[bank], "Bank already approved");
+
         approvedBanks[bank] = true;
+        bankNames[bank] = name;
+        bankList.push(bank);
+
         emit BankApproved(bank, name);
     }
+
+    function getApprovedBanks()
+        external
+        view
+        returns (address[] memory)
+{
+        return bankList;
+}
 
     function removeBank(
         address bank, 
@@ -82,6 +97,8 @@ contract SwiftHyperledgerBesu {
             onlyApprovedBanks(msg.sender)
             onlyApprovedBanks(toBank)
     {
+        require(msg.value > 0, "Amount must be greater than zero.");
+        
         (bool success, ) = toBank.call{value: msg.value}("");
         require(success, "ETH transfer failed.");
         

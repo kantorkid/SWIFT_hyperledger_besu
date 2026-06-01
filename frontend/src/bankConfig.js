@@ -1,4 +1,4 @@
-export const CONTRACT_ADDRESS = "0x70795787F139ae3f105F645364c835e478ADfa15";
+export const CONTRACT_ADDRESS = "0xA26E1ae71146E109e06aAc7028b10CaA063bC998";
 
 export const BANKS = {
   "0xfe3b557e8fb62b89f4916b721be55ceb828dbd73": {
@@ -12,7 +12,7 @@ export const BANKS = {
     role: "Approved settlement bank",
   },
   "0xf17f52151ebef6c7334fad080c5704d77216b732": {
-    label: "Unauthorized Wallet",
+    label: "Hacker",
     short: "Unauthorized",
     role: "Rejected participant",
   },
