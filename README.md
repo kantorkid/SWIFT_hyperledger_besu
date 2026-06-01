@@ -100,12 +100,12 @@ Integrated Chainlens Explorer provides:
 
                   Hyperledger Besu QBFT Network
 
-        ┌──────────────┬──────────────┬──────────────┬──────────────┐
-        │              │              │              │
-        ▼              ▼              ▼              ▼
-
-      Node 1         Node 2         Node 3         Node 4
-    Validator      Validator      Validator      Validator
+            ┌──────────────┬──────────────┬──────────────┬
+            │              │              │              │
+            ▼              ▼              ▼              ▼
+    
+          Node 1         Node 2         Node 3         Node 4
+        Validator      Validator      Validator      Validator
 
                                   │
                                   ▼
